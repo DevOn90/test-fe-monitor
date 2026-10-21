@@ -1,0 +1,11 @@
+{
+    "apiUrl": "http://localhost:8080/v1/api",
+    "authUrl": "http://localhost:8080/v1/auth",
+    "production": false,
+    "appName": "MyApp",
+    "version": "1.0.0",
+    "features": {
+        "enableDebugTools": true,
+        "enableExperimentalFeatures": false
+    }
+}

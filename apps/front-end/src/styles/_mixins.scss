@@ -1,0 +1,39 @@
+/**
+* Usage:
+* Define mixins here.
+* .header { @include mixins.flex-center; }
+*/
+
+// @mixin flex-center {
+//   display: flex;
+//   align-items: center;
+//   justify-content: center;
+// }
+
+
+// @mixin flex-between {
+//   display: flex;
+//   align-items: center;
+//   justify-content: space-between;
+// }
+
+
+// @mixin container {
+//   width: 100%;
+//   max-width: 1200px;
+//   margin-inline: auto;
+// }
+
+
+// @mixin mobile {
+//   @media (max-width: 640px) {
+//     @content;
+//   }
+// }
+
+
+// @mixin tablet {
+//   @media (max-width: 768px) {
+//     @content;
+//   }
+// }

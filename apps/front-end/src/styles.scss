@@ -1,1 +1,21 @@
-/* You can add global styles to this file, and also import other style files */
+/**
+* Use the @use rule to import the partials (variables, mixins,
+* theme) files into the main styles.scss file.
+* This allows you to access the variables, mixins,
+* and theme styles throughout your application.
+*/
+
+// /* Import partials */
+// @use "styles/variables" as vars;
+// @use "styles/mixins" as mixins;
+// @use "styles/theme" as theme;
+
+
+// /* Set global styles */
+// *,
+// html,
+// body {
+//   margin: 0;
+//   padding: 0;
+//   box-sizing: border-box;
+// }
