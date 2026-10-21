@@ -1,0 +1,13 @@
+version: "3.8"
+
+# This is placeholder only. The actual configuration is be adapted to project needs.
+# The main purpose of this file is to override the default configuration in docker-compose.yml
+
+services:
+  app:
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ..:/apps
+
+# Delete file if not needed. 

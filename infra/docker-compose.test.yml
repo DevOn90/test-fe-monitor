@@ -1,0 +1,15 @@
+version: "3.8"
+
+# This is placeholder only. The actual configuration is be adapted to project needs. 
+# The main purpose of this file is to override the default configuration in docker-compose.yml for testing environment.
+
+services:
+  app-test:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    environment:
+      - NODE_ENV=test
+    command: ["sh", "-c", "echo 'Test environment placeholder'"]
+
+# Delete file if not needed.
