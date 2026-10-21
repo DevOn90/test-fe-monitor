@@ -89,7 +89,9 @@
             ],
             "styles": [
               "src/styles.scss"
-            ]
+            ],
+            "codeCoverage": true,
+            "karmaConfig": "karma.conf.cjs"
           }
         },
         "lint": {
