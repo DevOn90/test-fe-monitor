@@ -1,0 +1,213 @@
+# ====================================================================
+# Hint: Search files
+# In root run command: find . -type f \( -name 'Dockerfile' -o -name 'Dockerfile.*' \) -print
+# ====================================================================
+
+# version: 2
+# updates:
+# # =====================================
+# # GitHub Actions
+# # =====================================
+# - package-ecosystem: "github-actions"
+#   directory: "/"  
+#   schedule:
+#     interval: "weekly"      
+#     day: "friday"          
+#     time: "12:00"           
+#     timezone: "UTC"
+#   open-pull-requests-limit: 10
+#   labels:
+#     - "dependencies"
+#   commit-message:
+#     prefix: "[deps][github-actions]: "
+#   groups:
+#     safe:
+#       patterns: ["*"]
+#       update-types: ["minor","patch"]
+#     major:
+#       patterns: ["*"]
+#       update-types: ["major"]
+
+# # ======================================
+# # NPM (frontend)
+# # ====================================== 
+# - package-ecosystem: "npm"
+#   directory: "/apps/frontend"
+#   schedule:
+#     interval: "weekly"      
+#     day: "friday"           
+#     time: "12:00"           
+#     timezone: "UTC"
+#   open-pull-requests-limit: 10
+#   labels:
+#     - "dependencies"
+#   commit-message:
+#     prefix: "[deps][npm][frontend]: "
+#   groups:
+#     safe:
+#       patterns: ["*"]
+#       update-types: ["minor","patch"]
+#     major:
+#       patterns: ["*"]
+#       update-types: ["major"] 
+
+# # ========================================
+# # Docker (API)
+# # ========================================
+# - package-ecosystem: "docker"
+#   directory: "/apps/api"
+#   schedule:
+#     interval: "weekly"
+#     day: "friday"
+#     time: "12:00"
+#     timezone: "UTC"
+#   open-pull-requests-limit: 10
+#   labels:
+#     - "dependencies"
+#   commit-message:
+#     prefix: "[deps][docker][api]: "
+#   groups:
+#     safe:
+#       patterns: ["*"]
+#       update-types: ["minor","patch"]
+#     major:
+#       patterns: ["*"]
+#       update-types: ["major"]
+
+# # ==========================================
+# # Docker (Frontend)
+# #===========================================
+# - package-ecosystem: "docker"
+#   directory: "/apps/frontend/app"
+#   schedule:
+#     interval: "weekly"
+#     day: "friday"
+#     time: "12:00"
+#     timezone: "UTC"
+#   open-pull-requests-limit: 10
+#   labels:
+#     - "dependencies"
+#   commit-message:
+#     prefix: "[deps][docker][frontend]: "
+#   groups:
+#     safe:
+#       patterns: ["*"]
+#       update-types: ["minor","patch"]
+#     major:
+#       patterns: ["*"]
+#       update-types: ["major"]
+
+# # ==========================================
+# # Docker-compose (dev-environment)
+# # ========================================== 
+# - package-ecosystem: "docker-compose"
+#   directory: "/infra/runtime/dev"
+#   schedule:
+#     interval: "weekly"
+#     day: "friday"
+#     time: "12:00"
+#     timezone: "UTC"
+#   open-pull-requests-limit: 10
+#   labels:
+#     - "dependencies"
+#   commit-message:
+#     prefix: "[deps][docker-compose][dev]: "
+#   groups:
+#     safe:
+#       patterns: ["*"]
+#       update-types: ["minor","patch"]
+#     major:
+#       patterns: ["*"]
+#       update-types: ["major"]
+
+# # ============================================
+# # Docker-compose (base-environment)
+# # ============================================
+# - package-ecosystem: "docker-compose"
+#   directory: "/infra/runtime/base"
+#   schedule:
+#     interval: "weekly"
+#     day: "friday"
+#     time: "12:00"
+#     timezone: "UTC"
+#   open-pull-requests-limit: 10
+#   labels:
+#     - "dependencies"
+#   commit-message:
+#     prefix: "[deps][docker-compose][base]: "
+#   groups:
+#     safe:
+#       patterns: ["*"]
+#       update-types: ["minor","patch"]
+#     major:
+#       patterns: ["*"]
+#       update-types: ["major"]
+
+# # ============================================
+# # Docker-compose (local-environment)
+# # ============================================
+# - package-ecosystem: "docker-compose"
+#   directory: "/infra/local"
+#   schedule:
+#     interval: "weekly"
+#     day: "friday"
+#     time: "12:00"
+#     timezone: "UTC"
+#   open-pull-requests-limit: 10
+#   labels:
+#     - "dependencies"
+#   commit-message:
+#     prefix: "[deps][docker-compose][local]: "
+#   groups:
+#     safe:
+#       patterns: ["*"]
+#       update-types: ["minor","patch"]
+#     major:
+#       patterns: ["*"]
+#       update-types: ["major"]
+
+# # ==============================================
+# # Maven (Api)
+# # ==============================================
+# - package-ecosystem: "maven"
+#   directory: "/apps/api"
+#   schedule:
+#     interval: "weekly"
+#     day: "friday"
+#     time: "12:00"
+#     timezone: "UTC"
+#   open-pull-requests-limit: 10
+#   labels:
+#     - "dependencies"
+#   commit-message:
+#     prefix: "[deps][maven]: "
+#   groups:
+#     safe:
+#       patterns: ["*"]
+#       update-types: ["minor","patch"]
+#     major:
+#       patterns: ["*"]
+#       update-types: ["major"]
+
+# # ================================================
+# # Pre-commit
+# # ================================================
+# - package-ecosystem: "pre-commit"
+#   directory: "/"
+#   schedule:
+#     interval: "weekly"
+#     day: "friday"
+#     time: "12:00"
+#     timezone: "UTC"
+#   open-pull-requests-limit: 10
+#   labels:
+#     - "dependencies"
+#   commit-message:
+#     prefix: "[deps][pre-commit]: "
+#   groups:
+#     safe:
+#       patterns: ["*"]
+#       update-types: ["minor","patch"]
+#     major:
+#       patterns: ["*"]
+#       update-types: ["major"]

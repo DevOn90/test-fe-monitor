@@ -1,0 +1,124 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# ------------------------------------------------------------
+# Purpose: Pre-commit is custom way to run various checks and scripts before committing changes to the repository.
+#          This script is executed automatically by Git before a commit is finalized.
+# Logic:
+# 1. Set global Variables
+# 2. Set logging functions
+# 3. Ensure uv (Astral) is installed and available in PATH
+# 4. Convert ODS to CSV and commit/push the generated CSVs to the repo.
+# 5. Main function to orchestrate the execution of the pre-commit hook.
+# ------------------------------------------------------------ 
+
+# ------------------------------------------------------------
+# 1. Global Variables
+# ------------------------------------------------------------
+
+SCRIPT_NAME="$(basename "$0")"
+TS="$(date +%Y-%m-%dT%H:%M:%S%z)"
+
+# Extend PATH to include ~/.local/bin for uv (Astral) in "$HOME/.local/bin" if it exists
+export PATH="$HOME/.local/bin:$PATH"
+
+# ------------------------------------------------------------
+# 2. Set logging functions
+# ------------------------------------------------------------
+
+log_info() {
+    echo "[INFO][$TS][$SCRIPT_NAME] $1"
+}
+
+log_error() {
+    echo "[ERROR][$TS][$SCRIPT_NAME] $1" 
+}
+
+log_warning() {
+    echo "[WARNING][$TS][$SCRIPT_NAME] $1"
+}
+
+log_debug() {
+    echo "[DEBUG][$TS][$SCRIPT_NAME] $1"
+}
+
+# ------------------------------------------------------------
+# 3. UV Astral check
+# ------------------------------------------------------------
+ 
+uv_astral_check() {
+
+    # Store the path to uv (Astral) binary in UV_BIN variable
+    UV_BIN="$(command -v uv 2>/dev/null || true)"
+
+    # If uv is not found in PATH, check for a common installation path in $HOME/.local/bin
+    if [[ -z "${UV_BIN}" && -x "${HOME}/.local/bin/uv" ]]; then
+        # Store common uv installation path in UV_BIN for later use
+        UV_BIN="${HOME}/.local/bin/uv"
+    fi
+
+    # If uv is still not found, check for a user-specific installation
+    if [[ -z "${UV_BIN}" && -x "/home/${USER}/.local/bin/uv" ]]; then
+        # Store user-specific uv installation path in UV_BIN for later use
+        UV_BIN="/home/${USER}/.local/bin/uv"
+    fi
+
+    # If not found raise an error and provide instructions.
+    if [[ -z "${UV_BIN}" ]]; then
+        log_error "uv (Astral) is required for this pre-commit hook to run. Please install it and try again."
+        log_info "uv is not installed or not in PATH."
+        log_info "Install uv (Astral) and ensure it is available in shell PATH."
+        log_info "  curl -LsSf https://astral.sh/uv/install.sh | sh"
+        log_info "  source ~/.local/bin/env to update your PATH"
+        log_info "HOME: ${HOME:-<unset>}"
+        log_info "Current PATH: $PATH"
+        exit 1
+    fi    
+}
+ 
+# -----------------------------------------------------------------
+# 4. Convert ODS to CSV and commit/push the generated CSVs to the repo.
+# -----------------------------------------------------------------
+
+convert_ods_to_csv() {
+
+    # Check if the export_ods_to_csv.py script exists in the expected location
+    if [[ -f "scripts/ci/export_ods_to_csv.py" ]]; then
+        log_info "Found export_ods_to_csv.py script. Proceeding with ODS to CSV conversion."
+    else
+        log_error "export_ods_to_csv.py script not found in scripts/ci/. Please ensure the script exists."
+        exit 1
+    fi
+
+    # Run the ODS to CSV conversion script with uv (Astral)
+    "${UV_BIN}" run scripts/ci/export_ods_to_csv.py
+ 
+    # Stage the generated CSV files for commit
+    log_info "Staging generated CSV files for commit..."
+    if find . -path '*/exportsCSV/*.csv' -type f 2>/dev/null | grep -q .; then
+        git add -A -- ':(glob)**/exportsCSV/*.csv'
+    else
+        log_warning "No CSV files found in exportsCSV directories. Skipping git add."
+    fi
+}
+
+
+# ----------------------------------------------------
+# X. Main
+# ----------------------------------------------------
+
+main() {
+
+    log_info "Starting pre-commit hook execution..."
+
+    log_info "Checking for uv (Astral) installation..."
+    uv_astral_check
+
+    log_info "Running ODS to CSV conversion..."
+    convert_ods_to_csv
+
+    log_info "Pre-commit hook execution completed successfully."
+}
+
+main "$@"

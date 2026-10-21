@@ -1,0 +1,11 @@
+name: cd-docker-publish
+
+on:
+  workflow_call:
+
+jobs:
+  docker-publish:
+    runs-on: ubuntu-latest    
+    steps:
+      - name: DockerPublishPlaceholder
+        run: echo "Docker publish workflow placeholder - not implemented yet"

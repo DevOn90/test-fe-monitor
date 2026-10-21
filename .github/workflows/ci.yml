@@ -1,0 +1,61 @@
+# Orchestration workflow for all CI jobs.
+# This workflow is triggered on push, pull request and manual dispatch.
+name: ci-orchestration
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  # The "changes" job detects if any relevant files have changed in the current commit or pull request.
+  # If so, it sets an output variable that can be used by downstream jobs to determine whether they should run.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      # The output variable "ods_pipeline" is set to true if any relevant files have changed, and false otherwise.
+      ods_pipeline: ${{ steps.filter.outputs.ods_pipeline }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect relevant changes
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          # The "ods_pipeline" filter checks for changes in the following files and directories:
+          filters: |
+            ods_pipeline:
+              - "**/*.ods"
+              - "**/exportsCSV/*.csv"
+              - ".githooks/pre-commit"
+              - "scripts/ci/export_ods_to_csv.py"
+              - ".github/workflows/ci-export_ods_to_csv.yml"
+              - ".github/workflows/ci.yml"
+
+  # The "export-ods-to-csv" job runs the export process if relevant files have changed or
+  # if the workflow was manually triggered. For job details, see the ci-export-ods-to-csv.yml workflow file.
+  # Policy: CSV files under exportsCSV are generated artifacts and must match ODS + exporter output.
+  export-ods-to-csv:
+     needs: changes
+     if: github.event_name == 'workflow_dispatch' || needs.changes.outputs.ods_pipeline == 'true'
+     uses: ./.github/workflows/ci-export_ods_to_csv.yml
+
+  # Placeholder job for npm audit. This job runs after the export-ods-to-csv job and is defined in the ci-npm-audit.yml workflow file.
+  npm-audit:
+     needs: changes
+     uses: ./.github/workflows/ci-npm-audit.yml
+
+  # Placeholder job for linting. This job runs after the export-ods-to-csv job and is defined in the ci-lint.yml workflow file.
+  lint:
+     needs: npm-audit
+     uses: ./.github/workflows/ci-lint.yml
+
+  # Placeholder job for testing. This job runs after the lint job and is defined in the ci-test.yml workflow file.
+  test:
+     needs: lint
+     uses: ./.github/workflows/ci-test.yml
+
+  # Placeholder job for building. This job runs after the test job and is defined in the ci-build.yml workflow file.
+  build:
+     needs: test
+     uses: ./.github/workflows/ci-build.yml 

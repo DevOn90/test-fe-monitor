@@ -1,0 +1,11 @@
+name: cd-npm-publish
+
+on:
+  workflow_call:
+
+jobs:
+  npm-publish:
+    runs-on: ubuntu-latest    
+    steps:
+      - name: NpmPublishPlaceholder
+        run: echo "NPM publish workflow placeholder - not implemented yet" 

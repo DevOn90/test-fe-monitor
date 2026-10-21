@@ -1,0 +1,12 @@
+name: ci-test
+
+on:
+  workflow_call:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: TestPlaceholder
+        run: echo "Test workflow placeholder - not implemented yet"

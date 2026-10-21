@@ -1,0 +1,22 @@
+name: cd-orchestration
+
+on: 
+  workflow_run:
+    workflows: ["ci-orchestration"]
+    types:
+      - completed
+
+jobs:
+   docker-build:
+      if: ${{ github.event.workflow_run.conclusion == 'success' }}
+      uses: ./.github/workflows/cd-docker-build.yml
+
+   docker-publish:
+      if: ${{ github.event.workflow_run.conclusion == 'success' }}
+      needs: docker-build
+      uses: ./.github/workflows/cd-docker-publish.yml
+
+   npm-publish:
+      if: ${{ github.event.workflow_run.conclusion == 'success' }}
+      needs: docker-publish
+      uses: ./.github/workflows/cd-npm-publish.yml

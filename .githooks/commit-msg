@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+# ================================================================
+# Purpose: Enforce commit message convention
+# Logic:
+# 1. Set Global Variables
+# 2. Logging functions
+# 3. Check if commit message matches the pattern
+# ================================================================
+
+# ===============================================================
+# 1. Variables
+# ===============================================================
+SCRIPT_NAME=$(basename "$0")
+TS=$(date +%Y-%m-%dT%H:%M:%S%z)
+
+commit_message=$(cat "$1")
+pattern="^(feat|fix|chore|docs|test|refactor|ci|build)(\(.+\))?: .+"
+
+PATH_TO_CONVENTIONS_DOCS="docs/03_project-governance/conventions/git-commit-conventions.md"
+
+# ===============================================================
+# 2. Logging functions
+# ===============================================================
+
+log_info(){
+    echo "[INFO][$TS][$SCRIPT_NAME] $1"
+}
+
+log_error(){
+    echo "[ERROR][$TS][$SCRIPT_NAME] $1"
+}
+
+log_warning(){
+    echo "[WARNING][$TS][$SCRIPT_NAME] $1"
+}
+
+log_debug(){
+    echo "[DEBUG][$TS][$SCRIPT_NAME] $1"
+}
+
+
+# ===============================================================
+# 3. Check if commit message matches the pattern
+# ===============================================================
+
+if ! [[ $commit_message =~ $pattern ]]; then
+    log_error "Invalid commit message:"
+    log_error "$commit_message"
+    echo ""
+    log_error "Expected format:"
+    log_error "type: description"
+    log_error "Check the commit message conventions in $PATH_TO_CONVENTIONS_DOCS"
+    exit 1
+fi

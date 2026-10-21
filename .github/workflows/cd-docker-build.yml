@@ -1,0 +1,12 @@
+name: cd-docker-build
+
+on:
+  workflow_call:
+
+
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: DockerBuildPlaceholder
+        run: echo "Docker build workflow placeholder - not implemented yet" 

@@ -1,0 +1,50 @@
+# ------------------------------------------------------------------------------
+# Purpose: This workflow is responsible for exporting ODS files to CSV format and 
+# verifying that the generated CSV files are up to date with the committed versions. 
+# ------------------------------------------------------------------------------ 
+name: Export ODS to CSV
+
+# This workflow is triggered when called by another workflow using the "workflow_call" event.
+on:
+  workflow_call:
+
+jobs:
+    export:
+        runs-on: ubuntu-latest
+        # Set permissions to read the repository contents, which is necessary for checking out the code and verifying CSV files.
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v4
+              # Set lfs to true to ensure that any large files managed by Git LFS are properly checked out.
+              with:
+                lfs: true
+
+              # Install Python dependencies required for the export process, including pandas for data manipulation and odfpy for handling ODS files.  
+            - name: Install Python dependencies
+              run: |
+                python -m pip install --upgrade pip
+                python -m pip install pandas odfpy
+
+              # The job step to export ODS files to CSV format using a Python script. 
+              # This script reads ODS files and generates corresponding CSV files in the specified output directory.
+            - name: Verify CSVs are up to date
+              shell: bash
+              run: |
+                set -euo pipefail
+
+                # Re-generate CSVs from ODS files in the CI working directory.
+                python scripts/ci/export_ods_to_csv.py
+
+                # Fail if any CSV differs from what is committed.
+                if [[ -n "$(git status --porcelain)" ]]; then
+                  echo ""
+                  echo "ERROR: The following CSV files are out of date:"
+                  git status --porcelain
+                  echo ""
+                  echo "Run the pre-commit hook locally and commit the updated CSVs:"
+                  echo "  git config core.hooksPath .githooks"
+                  exit 1
+                fi
+
+                echo "All CSV files are up to date."
