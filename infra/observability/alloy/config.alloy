@@ -1,0 +1,46 @@
+loki.write "frontend" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
+
+otelcol.exporter.otlp "tempo" {
+  client {
+    endpoint = "tempo:4317"
+
+    tls {
+      insecure = true
+    }
+  }
+}
+
+faro.receiver "frontend" {
+  server {
+    listen_address        = "0.0.0.0"
+    listen_port           = 12345
+    cors_allowed_origins  = ["http://localhost:4200"]
+    max_allowed_payload_size = "5MiB"
+
+    rate_limiting {
+      enabled    = true
+      strategy   = "global"
+      rate       = 50
+      burst_size = 100
+    }
+  }
+
+  extra_log_labels = {
+    app_name = "front-end",
+  }
+
+  // Avoid downloading source maps from arbitrary URLs.
+  sourcemaps {
+    download = false
+  }
+
+  // Connect Allow to Loki 
+  output {
+    logs = [loki.write.frontend.receiver]
+    traces = [otelcol.exporter.otlp.tempo.input]
+  }
+}
