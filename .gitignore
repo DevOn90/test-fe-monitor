@@ -1,0 +1,4 @@
+# Ignore python .venv directory
+.venv/
+__pycache__/
+.pytest_cache/

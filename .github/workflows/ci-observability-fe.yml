@@ -82,7 +82,7 @@ jobs:
                   echo "Waiting for Alloy"
 
                   for i in {1..60}; do
-                     if curl -fsS http://localhost:8080/ready; then
+                     if curl -fsS http://localhost:12346/-/ready; then
                         echo "Alloy is ready"
                         break
                      fi
