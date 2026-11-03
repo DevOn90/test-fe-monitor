@@ -1,0 +1,165 @@
+name: ci-observability-fe
+
+on:
+    workflow_call:
+
+jobs:
+    observability-fe:
+        name: Frontend Observability Tests
+        runs-on: ubuntu-latest
+
+        steps:
+            # 1. Checkout the repository
+            - name: Checkout repository
+              uses: actions/checkout@v4    # pin version
+
+            # 2. Set up Node.js
+            - name: Set up Node.js
+              uses: actions/setup-node@v4    # pin version
+              with:
+                  node-version: 22
+                  cache: "npm"
+                  cache-dependency-path: apps/front-end/package.json
+
+            # 3. Set up Python
+            - name: Set up Python
+              uses: actions/setup-python@v4    # pin version
+              with:
+                  python-version: 3.12
+                  cache: "pip"
+                  cache-dependency-path: scripts/ci/observability-fe/requirements.txt
+                  
+            # 4. Install Chrome and ChromeDriver
+            - name: Install Chrome and ChromeDriver
+              uses: browser-actions/setup-chrome@v1    # pin version
+              with:
+                  chrome-version: stable
+                  install-chromedriver: true
+
+            - name: Check Browser Version
+              run: |
+                  google-chrome --version
+                  chromedriver --version
+
+            # 5. Install Angular Deps
+            - name: Install Angular Deps
+              working-directory: apps/front-end
+              run: npm ci
+
+            # 6. Install Python Deps
+            - name: Install Python Deps
+              working-directory: .
+              run: |
+                  python -m pip install --upgrade pip
+                  python -m pip install -r scripts/ci/observability-fe/requirements.txt
+
+            # 7. Start Observability Services
+            - name: Start Observability Services
+              working-directory: .
+              run: |
+                  docker compose -f infra/observability/docker-compose.yml up -d
+
+            # 8. Wait for Observability Services to be Ready
+            - name: Wait for Observability Services to be Ready
+              working-directory: .
+              run: |
+                  echo "Waiting for Loki"
+
+                  for i in {1..60}; do
+                     if curl -fsS http://localhost:3100/ready; then
+                        echo "Loki is ready"
+                        break
+                     fi
+                     
+                     if [ "$i" -eq 60 ]; then
+                        echo "Loki is not ready after 60 seconds"
+                        exit 1
+                     fi
+
+                     sleep 2
+                  done
+
+                  echo "Waiting for Alloy"
+
+                  for i in {1..60}; do
+                     if curl -fsS http://localhost:8080/ready; then
+                        echo "Alloy is ready"
+                        break
+                     fi
+
+                     if [ "$i" -eq 60 ]; then
+                        echo "Alloy is not ready after 60 seconds"
+                        exit 1
+                     fi
+
+                     sleep 2
+                  done
+                  
+                  echo "All observability services are ready"
+
+            # 9. Start Angular Application
+            - name: Start Angular Application
+              working-directory: apps/front-end
+              run: |
+                  npm start -- --host 127.0.0.1 > /tmp/angular.log 2>&1 &
+                  echo $! > /tmp/angular.pid
+
+            # 10. Wait for Angular Application to be Ready
+            - name: Wait for Angular Application
+              working-directory: apps/front-end
+              run: |
+                echo "Waiting for Angular..."
+
+                for i in {1..60}; do
+                    if curl -fsS http://localhost:4200 > /dev/null; then
+                      echo "Angular application is ready."
+                      exit 0
+                    fi
+
+                    if [ "$i" -eq 60 ]; then
+                      echo "Angular application did not become ready."
+                      cat /tmp/angular.log
+                      exit 1
+                    fi
+
+                    sleep 2
+                done
+
+            # 11. Run Observability tests
+            - name: Run front-end Observability tests
+              working-directory: .
+              run: |
+                  python -m pytest scripts/ci/observability-fe -v -s
+
+            # 12. Collect diagnostics if something fails
+            - name: Collect diagnostics logs
+              working-directory: .
+              if: failure()
+              run: |
+                  echo "===== Angular Logs ====="
+                  cat /tmp/angular.log || true
+
+                  echo "===== Docker Containers ====="
+                  docker ps -a
+
+                  echo "===== Observability Logs ====="
+                  docker compose \
+                    -f infra/observability/docker-compose.yml \
+                    logs --no-color || true
+
+            # 13. Upload diagnostic artifacts
+            - name: Upload diagnostic logs
+              if: failure()
+              uses: actions/upload-artifact@v4   # pin version
+              with:
+                  name: observability-fe-diagnostics
+                  path: /tmp/angular.log
+                  if-no-files-found: ignore
+
+            # 14. Stop Observability Services
+            - name: Stop observability services
+              if: always()
+              run: |
+                docker compose \
+                  -f infra/observability/docker-compose.yml \
+                  down -v --remove-orphans

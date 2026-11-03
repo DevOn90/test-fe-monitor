@@ -45,6 +45,11 @@ jobs:
      needs: changes
      uses: ./.github/workflows/ci-npm-audit.yml
 
+  # Placeholder job for observability front-end. This job runs after the changes job and is defined in the ci-observability-fe.yml workflow file.
+  observability-fe:
+     needs: changes
+     uses: ./.github/workflows/ci-observability-fe.yml
+
   # Placeholder job for linting. This job runs after the export-ods-to-csv job and is defined in the ci-lint.yml workflow file.
   lint:
      needs: npm-audit
