@@ -12,9 +12,9 @@ def test_resources_loading_errors_reaches_loki(browser):
     # Trigger an resource loading error in the Angular application
     browser.execute_script(
         """
-        setTimeout(() => {
-            throw new Error('OBS-TEST-007');
-        }, 100);
+        const img = new Image();
+        img.src = `${location.origin}/OBS-TEST-007-missing-image.png`;
+        document.body.appendChild(img);
         """
     )
 
