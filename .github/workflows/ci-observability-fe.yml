@@ -33,7 +33,7 @@ jobs:
             - name: Install Chrome and ChromeDriver
               uses: browser-actions/setup-chrome@v1    # pin version
               with:
-                  chrome-version: stable
+                  chrome-version: 156           # not stable, specific version
                   install-chromedriver: true
 
             - name: Check Browser Version
