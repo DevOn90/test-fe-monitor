@@ -70,9 +70,10 @@ class LokiClient:
             self,
             logql_query: str,
             expected_text: str,
+            expected_count: int = 2,
             timeout: int = 30,
             interval: float = 2,
-    ) -> str:
+    ) -> list[str]:
 
             """
             Wait until a matching log line appears in Loki.
@@ -86,9 +87,8 @@ class LokiClient:
             while time.time() - start_time < timeout:
                 logs = self.query_logs(logql_query)
 
-                for log in logs:
-                    if expected_text in log:
-                        return log
+                if len(logs) >= expected_count:
+                    return logs
 
                 time.sleep(interval)
 
