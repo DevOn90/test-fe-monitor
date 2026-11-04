@@ -9,6 +9,7 @@ export function initializeFrontendMonitoring(): void {
       name: 'front-end',
       version: '1.0.0',
     },
+    dedupe: true,
     instrumentations: [
       ...getWebInstrumentations(),
       new TracingInstrumentation(),
