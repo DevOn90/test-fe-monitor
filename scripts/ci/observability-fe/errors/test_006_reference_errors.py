@@ -19,7 +19,7 @@ def test_reference_errors_reaches_loki(browser):
     )
 
     # Wait until the exception appears in Loki.
-    logs = loki.wait_for_log(
+    logs = loki.wait_for_logs(
         logql_query='{service_name=~".+"} |= "OBS_TEST_006_NON_EXISTENT_VARIABLE"',
         expected_count=2,
         expected_text=marker,
