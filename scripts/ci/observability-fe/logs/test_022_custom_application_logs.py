@@ -401,6 +401,28 @@ export class App {
         encoding="utf-8"
     )
 
+    # Wait for Angular application to reload
+    import requests
+    import time
+
+    print("Waiting for Angular application to become available")
+
+    for _ in range(30):
+        try:
+            response = requests.get(
+                "http://localhost:4200",
+                timeout=2
+            )
+            if response.status_code == 200:
+                print("Angular application is available")
+                return
+        
+        except requests.RequestException:
+            print("Angular application not available yet") # pass
+
+        time.sleep(1)
+
+    raise RuntimeError("Angular application did not become available within the expected time")
 
 # ========================================
 # 9. Main
