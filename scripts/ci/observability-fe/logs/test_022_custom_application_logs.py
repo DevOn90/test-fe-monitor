@@ -9,11 +9,10 @@
 #      2. Create Logging Service
 #      3. Update App File
 #      4. Update App HTML File
-#      5. Re-start Angular application
-#      6. Click buttons to trigger custom application logs
-#      7. Verify logs in Loki
-#      8. Reset files
-#      9. Main
+#      5. Click logging buttons
+#      6. Verify logs in Loki
+#      7. Reset files
+#      8. Main
 # =================================================
 
 from pathlib import Path
@@ -182,88 +181,8 @@ def update_app_html_file():
         encoding='utf-8'
     )
 
-update_app_html_file()
-
 # ========================================
-# 5. Re-start Angular application
-# ========================================
-
-# def restart_angular_application():
-
-#     import os
-#     import subprocess
-#     import signal
-#     import time
-#     import requests
-
-
-#     # Search process listening on port 4200 (Angular app)
-#     result = subprocess.run(
-#         ["lsof", "-it", "tcp:4200", "-sTCP:LISTEN"],
-#         capture_output=True,
-#         text=True
-#     )
-
-
-#     if result.returncode == 0 and result.stdout.strip():
-#         # Store the PID of the Angular process
-#         angular_pid = int(result.stdout.strip().splitlines()[0])
-
-#         print("Stopping Angular process with PID:", angular_pid)
-#         # Kill the Angular process to stop the running application
-#         os.kill(angular_pid, signal.SIGTERM)
-
-#     else:
-#         print("No Angular process found on port 4200")
-
-#     # Wait until port become available
-#     for _ in range(30):
-#         result = subprocess.run(
-#             ["bash", "-c", "curl -s http://localhost:4200 > /dev/null"],
-#             capture_output=True,
-#         )
-#         if result.returncode != 0:
-#             break
-        
-#         time.sleep(1)
-
-#     # Start the Angular application again
-#     # Use a log file to capture the output of the Angular application, the same as
-#     # ci-observability-fe.yml step 9 uses the same log file to capture Angular output
-#     log_file_path = Path("/tmp/angular.log")
-
-#     with open(log_file_path, "w") as log_file:
-#         process = subprocess.Popen(
-#             ["npm", "start", "--", "--host", "127.0.0.1"],
-#             cwd=FRONTEND_ROOT,
-#             stdout=log_file,
-#             stderr=subprocess.STDOUT,
-#             start_new_session=True
-#         )
-
-#     # Write the PID of the new Angular process to the PID file
-#     # Use a PID file to capture the PID of the running Angular process, the same as
-#     # ci-observability-fe.yml step 9 uses the same PID file to capture Angular PID
-#     pid_file = Path("/tmp/angular.pid")
-#     pid_file.write_text(str(process.pid))
-
-#     # Wait for the Angular application to become available on port 4200
-#     for _ in range(30):
-#         try:
-#             response = requests.get(
-#                 "http://localhost:4200",
-#                 timeout=2,
-#             )
-#             if response.status_code == 200:
-#                 return
-#         except:
-#             print("Angular application not yet available on port 4200")
-#         time.sleep(1)
-
-#     raise RuntimeError("Angular application did not become available on port 4200 within the expected time")
-
-# ========================================
-# 6. Trigger custom application logs by clicking the buttons in the front-end application
+# 5. Click logging buttons
 # ========================================
 
 from selenium.webdriver.common.by import By
@@ -287,7 +206,7 @@ def click_logging_buttons(browser):
     info_button.click()
 
 # ========================================
-# 7. Verify logs in Loki
+# 6. Verify logs in Loki
 # ========================================
 from helpers.loki import LokiClient
 
@@ -349,7 +268,7 @@ def verify_logs_in_loki():
     assert "sdk_name=faro-web" in log_info
 
 # ========================================
-# 8. Reset files
+# 7. Reset files
 # ========================================
 
 def reset_files():
@@ -425,36 +344,31 @@ export class App {
     raise RuntimeError("Angular application did not become available within the expected time")
 
 # ========================================
-# 9. Main
+# 8. Main
 # ========================================
 
 def test_custom_application_logs(browser):  # keep 'test' in function name for conftest.py @pytest.fixture
                                             # to supply the browser for selenium tests
     try: 
-        print("Starting script execution")
-        print("Creating logging service")
+        # Create the logging service before updating the app files
         create_logging_service()
 
-        print("Updating app file")
+        # Update the app TypeScript file with the necessary changes
         update_app_file()
 
-        print("Updating app HTML file")
+        # Update the app HTML file with the necessary changes
         update_app_html_file()
-
-        #print("Restarting Angular application")
-        #restart_angular_application()
 
         # Navigate to angular application
         browser.get("http://localhost:4200")
 
-        print("Triggering custom application logs")
+        # Click the logging buttons to trigger custom application logs
         click_logging_buttons(browser)
 
-        print("Verifying logs in Loki")
+        # Verify that the logs are present in Loki
         verify_logs_in_loki()
     
     finally:
-        print("Resetting files to original state")
+        # Reset the app files to their original state
         reset_files()
-
-        print("Script execution completed")
+        
