@@ -7,11 +7,28 @@ def test_successfull_http_request_reaches_loki(browser):
     # open the Angualar application
     browser.get("http://localhost:4200")
 
+    # Set script timeout for browser execution
+    browser.set_script_timeout(30)
+
     # Trigger a successful HTTP request in Angular application
-    browser.execute_script(f"""
+    # Arguments is selenium 
+    browser.execute_async_script("""
+          const done = arguments[arguments.length - 1];
+
           fetch('https://jsonplaceholder.typicode.com/posts/1')
-            .then(response => response.json())
-            .then(data => console.log('OBS-TEST-011', data));
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP request failed: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('OBS-TEST-011', data);
+                done({success: true});
+            })
+            .catch(error => {
+                done({success: false, error: error.message});
+            });
     """)
 
     # Wait for the HTTP tracing event in Loki.
