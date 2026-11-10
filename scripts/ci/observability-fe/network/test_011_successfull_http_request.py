@@ -13,6 +13,8 @@ def test_successfull_http_request_reaches_loki(browser):
     # Trigger a successful HTTP request in Angular application
     # Arguments is selenium 
     browser.execute_async_script("""
+          // Selenium automatically provides a callback function as the last argument.
+          // We use this callback to notify Selenium when the asynchronous fetch request finishes. 
           const done = arguments[arguments.length - 1];
 
           fetch('https://jsonplaceholder.typicode.com/posts/1')
