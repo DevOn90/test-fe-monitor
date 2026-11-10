@@ -504,7 +504,6 @@ export class App {
                 timeout=2
             )
             if response.status_code == 200:
-                print("Angular application is available")
                 return
         
         except requests.RequestException:

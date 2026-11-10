@@ -421,6 +421,7 @@ def start_angular_prod_server() -> None:
         with open(log_file_path, 'w', encoding='utf-8') as log_file:
             process = subprocess.Popen(
                 [
+                    "npx",
                     "ng",
                     "serve",
                     "--configuration",
@@ -735,8 +736,6 @@ export class App {
     import requests
     import time
 
-    print("Waiting for Angular application to become available")
-
     for _ in range(30):
         try:
             response = requests.get(
@@ -744,7 +743,6 @@ export class App {
                 timeout=2
             )
             if response.status_code == 200:
-                print("Angular application is available")
                 return
         
         except requests.RequestException:
