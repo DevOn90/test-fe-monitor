@@ -18,7 +18,10 @@ faro.receiver "frontend" {
   server {
     listen_address        = "0.0.0.0"
     listen_port           = 12345
-    cors_allowed_origins  = ["http://localhost:4200"]
+    cors_allowed_origins  = [
+         "http://localhost:4200",
+         "http://localhost:4201",
+      ]
     max_allowed_payload_size = "5MiB"
 
     rate_limiting {

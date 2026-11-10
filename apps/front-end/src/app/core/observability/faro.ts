@@ -11,7 +11,9 @@ export function initializeFrontendMonitoring(): void {
     },
     dedupe: true,
     instrumentations: [
-      ...getWebInstrumentations(),
+      ...getWebInstrumentations({
+        captureConsole: true,
+      }),
       new TracingInstrumentation(),
       new ResourceErrorsInstrumentation(),
     ],
