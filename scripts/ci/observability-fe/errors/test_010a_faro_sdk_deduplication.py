@@ -17,8 +17,6 @@ def test_faro_sdk_deduplicates_repeated_error_reports(browser):
                 window.faro.api.pushError(error);
             }
 
-            console.log(`Triggered three Faro SDK error reports: ${marker}`);
-
             return marker;
         })();
     """)

@@ -44,12 +44,12 @@ def test_successfull_request_reaches_loki(browser) -> None:
                 return response.json();
             })
             .then(data => {
-                console.log('OBS-TEST-011-FETCH:', data);
-                callback({success: true, status: 200});
+                callback({success: true, status: 200, dataReceived: !!data});
             })
             .catch(error => callback({success: false, error: error.message}));
     """)
 
+    # Trigger a successful XML request in Angular application
     browser.execute_async_script("""
     const callback = arguments[arguments.length - 1];
 
@@ -57,8 +57,7 @@ def test_successfull_request_reaches_loki(browser) -> None:
     xhr.open('GET', 'https://jsonplaceholder.typicode.com/posts/1');
 
     xhr.onload = () => {
-        console.log('OBS-TEST-011-XHR:', xhr.status, xhr.responseText);
-        callback({success: xhr.status === 200, status: xhr.status});
+        callback({success: xhr.status === 200, status: xhr.status, dataReceived: !!xhr.responseText});
     };
 
     xhr.onerror = () => callback({success: false, error: 'Network error'});

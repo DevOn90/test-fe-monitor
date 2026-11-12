@@ -12,6 +12,7 @@ def test_csp_violations_reaches_loki(browser):
     # Trigger a CSP violation in the Angular application
     browser.execute_script(
         """
+        document.addEventListener('securitypolicyviolation', event => {})
         const meta = document.createElement('meta')
         meta.httpEquiv="Content-Security-Policy"
         meta.content="img-src 'self'"

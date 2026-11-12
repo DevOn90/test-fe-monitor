@@ -13,6 +13,7 @@ def test_resources_loading_errors_reaches_loki(browser):
     browser.execute_script(
         """
         const img = new Image();
+        img.addEventListener('error', () => {})
         img.src = `${location.origin}/OBS-TEST-007-missing-image.png`;
         document.body.appendChild(img);
         """
