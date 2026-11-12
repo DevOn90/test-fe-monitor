@@ -22,6 +22,10 @@ def test_client_http_errors(browser) -> None:
         None
     """
 
+    # Create unique identifier for this test run
+    import uuid
+    test_run_id = uuid.uuid4().hex
+
     loki = LokiClient()
 
     browser.get("http://localhost:4200")
@@ -30,9 +34,10 @@ def test_client_http_errors(browser) -> None:
 
     # Trigger a client-side HTTP 404 error in Angular application
     browser.execute_async_script("""
+        const testRunId = arguments[0];
         const callback = arguments[arguments.length - 1];
 
-        fetch('https://jsonplaceholder.typicode.com/OBS-TEST-012-missing-resource')
+        fetch(`https://jsonplaceholder.typicode.com/missing-resource?obs_test_id=OBS-TEST-012-missing-resource-${testRunId}`)
             .then(response => {
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 return response.json();
@@ -41,13 +46,14 @@ def test_client_http_errors(browser) -> None:
                 callback({success: true, status: 200, dataReceived: !!data});
             })
             .catch(error => callback({success: false, error: error.message}));
-    """)
+    """, test_run_id)
 
     # Trigger a client-side HTTP 400 error in Angular application
     browser.execute_async_script("""
+        const testRunId = arguments[0];
         const callback = arguments[arguments.length - 1];
 
-        fetch('https://httpbin.org/status/400')
+        fetch(`https://httpbin.org/status/400?obs_test_id=OBS-TEST-012-400-${testRunId}`)
             .then(response => {
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 return response.json();
@@ -56,44 +62,48 @@ def test_client_http_errors(browser) -> None:
                 callback({success: true, status: 200, dataReceived: !!data});
             })
             .catch(error => callback({success: false, error: error.message}));
-    """)
+    """, test_run_id)
 
     # Get the client-side HTTP 404 error tracinglog from Loki
     http_404_log_tracing = loki.wait_for_log(
         logql_query=(
-            '{service_name=~".+"} |= "OBS-TEST-012-missing-resource"'
+            '{service_name=~".+"}'
+            f'|= "obs_test_id=OBS-TEST-012-missing-resource-{test_run_id}"'
             '|= "event_name=faro.tracing.fetch"'
         ),
-        expected_text="OBS-TEST-012-missing-resource",
+        expected_text=f"obs_test_id=OBS-TEST-012-missing-resource-{test_run_id}",
         timeout=30
     )
 
     # Get the client-side HTTP 404 error performance log from Loki
     http_404_log_performance = loki.wait_for_log(
         logql_query=(
-            '{service_name=~".+"} |= "OBS-TEST-012-missing-resource"'
+            '{service_name=~".+"}'
+            f'|= "obs_test_id=OBS-TEST-012-missing-resource-{test_run_id}"'
             '|= "event_name=faro.performance.resource"'
         ),
-        expected_text="OBS-TEST-012-missing-resource",
+        expected_text=f"obs_test_id=OBS-TEST-012-missing-resource-{test_run_id}",
         timeout=30
     )
     # Get the client-side HTTP 400 error tracinglog from Loki
     http_400_log_tracing = loki.wait_for_log(
         logql_query=(
-            '{service_name=~".+"} |= "httpbin.org/status/400"'
+            '{service_name=~".+"}'
+            f'|= "obs_test_id=OBS-TEST-012-400-{test_run_id}"'
             '|= "event_name=faro.tracing.fetch"'
         ),
-        expected_text="httpbin.org/status/400",
+        expected_text=f"obs_test_id=OBS-TEST-012-400-{test_run_id}",
         timeout=30
     )
 
     # Get the client-side HTTP 400 error performance log from Loki
     http_400_log_performance = loki.wait_for_log(
         logql_query=(
-            '{service_name=~".+"} |= "httpbin.org/status/400"'
+            '{service_name=~".+"}'
+            f'|= "obs_test_id=OBS-TEST-012-400-{test_run_id}"'
             '|= "event_name=faro.performance.resource"'
         ),
-        expected_text="httpbin.org/status/400",
+        expected_text=f"obs_test_id=OBS-TEST-012-400-{test_run_id}",
         timeout=30
     )
 

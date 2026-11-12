@@ -23,6 +23,10 @@ def test_network_failures_reaches_loki(browser) -> None:
         None
     """
 
+    # Create unique identifier for this test run
+    import uuid
+    test_run_id = uuid.uuid4().hex
+
     loki = LokiClient()
 
     browser.get("http://localhost:4200")
@@ -31,102 +35,105 @@ def test_network_failures_reaches_loki(browser) -> None:
 
     # Simulate a network fetch failure by requesting an unavailable endpoint
     browser.execute_async_script("""
+    const testRunId = arguments[0];
     const callback = arguments[arguments.length - 1];
 
-    fetch('http://127.0.0.1:59999/unavailable/OBS-TEST-014-Network')
+    fetch(`http://127.0.0.1:59999/?obs_test_id=OBS-TEST-014-unavailable-${testRunId}`)
         .then(() => callback({success: false, reason: 'Request unexpectedly succeeded'}))
         .catch(() => callback({success: true}));
-""")
+""", test_run_id)
 
     # Simulate a request timeout failure
     browser.execute_async_script("""
+    const testRunId = arguments[0];
     const callback = arguments[arguments.length - 1];
 
     const controller = new AbortController();
 
     setTimeout(() => controller.abort(), 1000);
 
-    fetch('https://httpbin.org/delay/5', {
+    fetch(`https://httpbin.org/delay/5?obs_test_id=OBS-TEST-014-timeout-${testRunId}`, {
         signal: controller.signal
     })
         .then(() => callback({success: false, reason: 'Request unexpectedly succeeded'}))
         .catch(() => callback({success: true}));
-""")
+""", test_run_id)
 
     # Simulate a CORS failure
     browser.execute_async_script("""
+    const testRunId = arguments[0];
     const callback = arguments[arguments.length - 1];
 
-    fetch('https://example.com/OBS-TEST-014-cors')
+    fetch(`https://example.com/OBS-TEST-014-cors?obs_test_id=OBS-TEST-014-cors-${testRunId}`)
         .then(() => callback({success: false, reason: 'Request unexpectedly succeeded'}))
         .catch(() => callback({success: true}));
 
-""")
+""", test_run_id)
 
     # Get network failure logs from Loki
     network_failure_log = loki.wait_for_log(
         logql_query=(
             '{service_name=~".+"}' 
-            '|= "OBS-TEST-014-Network"'
+            f'|= "obs_test_id=OBS-TEST-014-unavailable-{test_run_id}"'
             '|= "event_name=faro.tracing.fetch"'
         ),
         timeout=30,
-        expected_text='OBS-TEST-014-Network'
+        expected_text=f'obs_test_id=OBS-TEST-014-unavailable-{test_run_id}'
     )
 
     # Get network failure log performance metrics from Loki
     network_failure_perf_log = loki.wait_for_log(
         logql_query=(
             '{service_name=~".+"}' 
-            '|= "OBS-TEST-014-Network"'
+            f'|= "obs_test_id=OBS-TEST-014-unavailable-{test_run_id}"'
             '|= "event_name=faro.performance.resource"'
         ),
         timeout=30,
-        expected_text='OBS-TEST-014-Network'
+        expected_text=f'obs_test_id=OBS-TEST-014-unavailable-{test_run_id}'
     )
 
     # Get request timeout failure logs from Loki
     timeout_failure_log = loki.wait_for_log(
             logql_query=(
                 '{service_name=~".+"}' 
-                '|= "httpbin.org"'
+                f'|= "obs_test_id=OBS-TEST-014-timeout-{test_run_id}"'
                 '|= "event_name=faro.tracing.fetch"'
             ),
             timeout=30,
-            expected_text='httpbin.org'
+            expected_text=f'obs_test_id=OBS-TEST-014-timeout-{test_run_id}'
         )
 
     # Verify Timeout Failure Performance Logs
     timeout_failure_perf_log = loki.wait_for_log(
         logql_query=(
             '{service_name=~".+"}' 
-            '|= "httpbin.org"'
+            f'|= "obs_test_id=OBS-TEST-014-timeout-{test_run_id}"'
             '|= "event_name=faro.performance.resource"'
         ),
         timeout=30,
-        expected_text='httpbin.org'
+        expected_text=f'obs_test_id=OBS-TEST-014-timeout-{test_run_id}'
     )
 
     # Get CORS failure logs from Loki
     cors_failure_log = loki.wait_for_log(
         logql_query=(
             '{service_name=~".+"}' 
-            '|= "OBS-TEST-014-cors"'
+            f'|= "obs_test_id=OBS-TEST-014-cors-{test_run_id}"'
             '|= "event_name=faro.tracing.fetch"'
         ),
         timeout=30,
-        expected_text='OBS-TEST-014-cors'
+        expected_text=f'obs_test_id=OBS-TEST-014-cors-{test_run_id}'
     )
 
     # Get CORS failure performance logs from Loki
     cors_failure_perf_log = loki.wait_for_log(
         logql_query=(
             '{service_name=~".+"}' 
-            '|= "OBS-TEST-014-cors"'
+            f'|= "obs_test_id=OBS-TEST-014-cors-{test_run_id}"'
             '|= "event_name=faro.performance.resource"'
         ),
         timeout=30,
-        expected_text='OBS-TEST-014-cors'
+        expected_text=f'obs_test_id=OBS-TEST-014-cors-{test_run_id}'
     )
 
     # Verify that all network failure logs were captured

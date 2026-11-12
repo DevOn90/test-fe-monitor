@@ -25,6 +25,11 @@ def test_successfull_request_reaches_loki(browser) -> None:
         None
     """
 
+    # Create unique identifier for this test run
+    import uuid
+    test_run_id = uuid.uuid4().hex
+
+
     loki = LokiClient()
 
     # open the Angualar application
@@ -36,9 +41,10 @@ def test_successfull_request_reaches_loki(browser) -> None:
     # Trigger a successful HTTP request in Angular application
     # Arguments is selenium 
     browser.execute_async_script("""
+        const testRunId = arguments[0];
         const callback = arguments[arguments.length - 1];
 
-        fetch('https://jsonplaceholder.typicode.com/posts/1')
+        fetch(`https://jsonplaceholder.typicode.com/posts/1?obs_test_id=OBS-TEST-011-FETCH-${testRunId}`)
             .then(response => {
                 if (!response.ok) throw new Error(`HTTP ${response.status}`);
                 return response.json();
@@ -47,14 +53,16 @@ def test_successfull_request_reaches_loki(browser) -> None:
                 callback({success: true, status: 200, dataReceived: !!data});
             })
             .catch(error => callback({success: false, error: error.message}));
-    """)
+    """, test_run_id)
 
     # Trigger a successful XML request in Angular application
     browser.execute_async_script("""
+    
+    const testRunId = arguments[0];
     const callback = arguments[arguments.length - 1];
 
     const xhr = new XMLHttpRequest();
-    xhr.open('GET', 'https://jsonplaceholder.typicode.com/posts/1');
+    xhr.open('GET', `https://jsonplaceholder.typicode.com/posts/1?obs_test_id=OBS-TEST-011-XHR-${testRunId}`);
 
     xhr.onload = () => {
         callback({success: xhr.status === 200, status: xhr.status, dataReceived: !!xhr.responseText});
@@ -63,13 +71,13 @@ def test_successfull_request_reaches_loki(browser) -> None:
     xhr.onerror = () => callback({success: false, error: 'Network error'});
 
     xhr.send();
-""")
+""", test_run_id)
 
     # Wait for the HTTP tracing event in Loki.
     http_tracing_log = loki.wait_for_log(
         logql_query=(
             '{service_name=~".+"} '
-            '|= "jsonplaceholder.typicode.com" '
+            f'|= "obs_test_id=OBS-TEST-011-FETCH-{test_run_id}" '
             '|= "faro.tracing.fetch"'
         ),
         expected_text="jsonplaceholder.typicode.com",
@@ -80,7 +88,7 @@ def test_successfull_request_reaches_loki(browser) -> None:
     xhr_tracing_log = loki.wait_for_log(
         logql_query=(
             '{service_name=~".+"} '
-            '|= "jsonplaceholder.typicode.com" '
+            f'|= "obs_test_id=OBS-TEST-011-XHR-{test_run_id}" '
             '|= "faro.tracing.xml-http-request"'
         ),
         expected_text="jsonplaceholder.typicode.com",
@@ -91,7 +99,7 @@ def test_successfull_request_reaches_loki(browser) -> None:
     http_performance_log = loki.wait_for_log(
         logql_query=(
             '{service_name=~".+"} '
-            '|= "jsonplaceholder.typicode.com" '
+            f'|= "obs_test_id=OBS-TEST-011-FETCH-{test_run_id}" '
             '|= "event_data_initiatorType=fetch"'
         ),
         expected_text="jsonplaceholder.typicode.com",
@@ -102,7 +110,7 @@ def test_successfull_request_reaches_loki(browser) -> None:
     xhr_performance_log = loki.wait_for_log(
         logql_query=(
             '{service_name=~".+"} '
-            '|= "jsonplaceholder.typicode.com" '
+            f'|= "obs_test_id=OBS-TEST-011-XHR-{test_run_id}" '
             '|= "event_data_initiatorType=xmlhttprequest"'
         ),
         expected_text="jsonplaceholder.typicode.com",
