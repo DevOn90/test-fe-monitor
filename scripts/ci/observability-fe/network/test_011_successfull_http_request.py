@@ -80,7 +80,7 @@ def test_successfull_request_reaches_loki(browser) -> None:
             f'|= "obs_test_id=OBS-TEST-011-FETCH-{test_run_id}" '
             '|= "faro.tracing.fetch"'
         ),
-        expected_text="jsonplaceholder.typicode.com",
+        expected_text=f"obs_test_id=OBS-TEST-011-FETCH-{test_run_id}",
         timeout=30,
     )
 
@@ -91,7 +91,7 @@ def test_successfull_request_reaches_loki(browser) -> None:
             f'|= "obs_test_id=OBS-TEST-011-XHR-{test_run_id}" '
             '|= "faro.tracing.xml-http-request"'
         ),
-        expected_text="jsonplaceholder.typicode.com",
+        expected_text=f"obs_test_id=OBS-TEST-011-XHR-{test_run_id}",
         timeout=30
     )
 
@@ -102,7 +102,7 @@ def test_successfull_request_reaches_loki(browser) -> None:
             f'|= "obs_test_id=OBS-TEST-011-FETCH-{test_run_id}" '
             '|= "event_data_initiatorType=fetch"'
         ),
-        expected_text="jsonplaceholder.typicode.com",
+        expected_text=f"obs_test_id=OBS-TEST-011-FETCH-{test_run_id}",
         timeout=30,
     )
 
@@ -113,7 +113,7 @@ def test_successfull_request_reaches_loki(browser) -> None:
             f'|= "obs_test_id=OBS-TEST-011-XHR-{test_run_id}" '
             '|= "event_data_initiatorType=xmlhttprequest"'
         ),
-        expected_text="jsonplaceholder.typicode.com",
+        expected_text=f"obs_test_id=OBS-TEST-011-XHR-{test_run_id}",
         timeout=30,
     )
     
