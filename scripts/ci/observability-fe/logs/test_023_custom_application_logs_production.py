@@ -29,6 +29,7 @@
 
 from datetime import time
 from pathlib import Path
+import shutil
 
 # ========================================
 # 1. Define Variables
@@ -301,7 +302,6 @@ def backup_angular_json() -> None:
     - `./angular.json.bak`    
     """
     
-    import shutil
     shutil.copy2(ANGULAR_JSON_PATH, ANGULAR_JSON_BACKUP_PATH)
 
 # ========================================
@@ -730,7 +730,9 @@ export class App {
     if PROD_ENV_FILE_PATH.exists():
        PROD_ENV_FILE_PATH.unlink()
 
-    
+    # Restore angular.json if a backup exists
+    if ANGULAR_JSON_BACKUP_PATH.exists():
+        shutil.move(ANGULAR_JSON_BACKUP_PATH, ANGULAR_JSON_PATH)
 
     # Wait for Angular application to reload
     import requests
