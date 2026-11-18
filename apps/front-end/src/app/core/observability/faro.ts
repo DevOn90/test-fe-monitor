@@ -1,6 +1,11 @@
-import { initializeFaro, getWebInstrumentations } from '@grafana/faro-web-sdk';
+import { 
+  initializeFaro, 
+  getWebInstrumentations,
+  WebVitalsInstrumentation,
+} from '@grafana/faro-web-sdk';
 import { TracingInstrumentation } from '@grafana/faro-web-tracing'
 import { ResourceErrorsInstrumentation } from './instrumentations/resource-errors.instrumentation';
+import { LongTaskInstrumentation } from './instrumentations/long-task.instrumentation';
 
 export function initializeFrontendMonitoring(): void {
   initializeFaro({
@@ -16,6 +21,8 @@ export function initializeFrontendMonitoring(): void {
       }),
       new TracingInstrumentation(),
       new ResourceErrorsInstrumentation(),
+      new LongTaskInstrumentation(),
+      new WebVitalsInstrumentation(),
     ],
   });
 }
