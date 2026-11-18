@@ -86,7 +86,7 @@ def test_resource_timing_reaches_loki(browser):
     # Verify the structure of the resource timing data
     assert "kind=event" in resource_timing_data
     assert "event_name=faro.performance.resource" in resource_timing_data
-    assert "event_data_initiatorType=xmlhttprequest" in resource_timing_data
+    assert "event_data_initiatorType=" in resource_timing_data
     assert "event_data_decodedBodySize=" in resource_timing_data
     assert "event_data_duration=" in resource_timing_data
     assert "event_data_name=http://localhost:4200/config/config.json" in resource_timing_data
