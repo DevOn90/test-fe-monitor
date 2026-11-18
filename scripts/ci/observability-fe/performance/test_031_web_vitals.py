@@ -32,6 +32,7 @@ import time
 import shutil
 import uuid
 import requests
+from selenium.webdriver.support.ui import WebDriverWait
 
 FRONTEND_ROOT = Path(__file__).resolve().parents[4] \
     / 'apps' \
@@ -63,10 +64,13 @@ def test_resource_timing_reaches_loki(browser):
     Returns:
         None
     """
+
+    # Create unique identifier for this test run
+    test_run_id = f"OBS-TEST-031-RESOURCE-{uuid.uuid4().hex}"
     
     loki = LokiClient()
 
-    browser.get("http://localhost:4200")
+    browser.get(f"http://localhost:4200/?test_run_id={test_run_id}")
 
     browser.set_script_timeout(30)
     
@@ -75,15 +79,17 @@ def test_resource_timing_reaches_loki(browser):
         logql_query=(
             '{service_name=~".+"}'
             '|= "faro.performance.resource"'
+            f'|= "{test_run_id}"'
         ),
         timeout=30,
-        expected_text="faro.performance.resource"
+        expected_text=test_run_id
     )
 
     # Verify that resource timing data was found in Loki
     assert resource_timing_data is not None, "Resource timing data not found in Loki"
 
     # Verify the structure of the resource timing data
+    assert f"{test_run_id}" in resource_timing_data
     assert "kind=event" in resource_timing_data
     assert "event_name=faro.performance.resource" in resource_timing_data
     assert "event_data_initiatorType=" in resource_timing_data
@@ -111,10 +117,13 @@ def test_long_tasks_reaches_loki(browser):
     Returns:
         None
     """
+
+    # Create unique identifier for this test run
+    test_run_id = f"OBS-TEST-031-LONGTASK-{uuid.uuid4().hex}"
     
     loki = LokiClient()
 
-    browser.get("http://localhost:4200")
+    browser.get(f"http://localhost:4200/?test_run_id={test_run_id}")
 
     browser.set_script_timeout(30)
 
@@ -133,16 +142,18 @@ def test_long_tasks_reaches_loki(browser):
     long_task_data = loki.wait_for_log(
         logql_query=(
             '{service_name=~".+"}'
+            f'|= "{test_run_id}"'
             '|= "faro.performance.longtask"'
         ),
         timeout=30,
-        expected_text="faro.performance.longtask"
+        expected_text=test_run_id
     )
 
     # Verify that long task data was found in Loki
     assert long_task_data is not None, "Long task data not found in Loki"
 
     # Verify the structure of the long task data
+    assert f"{test_run_id}" in long_task_data
     assert "kind=event" in long_task_data
     assert "event_name=faro.performance.longtask" in long_task_data
     assert "event_data_duration_ms=" in long_task_data
@@ -166,10 +177,13 @@ def test_web_vitals_cls_reaches_loki(browser):
     Returns:
         None
     """
+
+    # Create unique identifier for this test run
+    test_run_id = f"OBS-TEST-031-CLS-{uuid.uuid4().hex}"
     
     loki = LokiClient()
 
-    browser.get("http://localhost:4200")
+    browser.get(f"http://localhost:4200/?test_run_id={test_run_id}")
 
     browser.set_script_timeout(30)
 
@@ -223,16 +237,17 @@ def test_web_vitals_cls_reaches_loki(browser):
             '{service_name=~".+"}'
             '|= "kind=measurement"'
             '|= "cls"'
-            '|= "OBS-TEST-031-CONTENT"'
+            f'|= "{test_run_id}"'
         ),
         timeout=30,
-        expected_text='OBS-TEST-031-CONTENT'
+        expected_text=test_run_id
     )
 
     # Verify that the CLS event was captured
     assert cls_data is not None, "CLS event not found in Loki logs"
 
     # Veify that the CLS event contains the expected content
+    assert test_run_id in cls_data
     assert "kind=measurement" in cls_data
     assert "type=web-vitals" in cls_data
     assert "cls=" in cls_data
@@ -262,7 +277,7 @@ def test_web_vitals_inp_reaches_loki(browser) -> None:
     
     loki = LokiClient()  # Assuming you have a Loki client instance available
 
-    browser.get("http://localhost:4200")
+    browser.get(f"http://localhost:4200/?test_run_id={test_run_id}")
 
     browser.set_script_timeout(30)
 
@@ -325,13 +340,15 @@ def test_web_vitals_inp_reaches_loki(browser) -> None:
             f'|= "{test_run_id}"'
         ),
         timeout=30,
-        expected_text=f'{test_run_id}'
+        expected_text=test_run_id
+
     )
 
     # Verify that the INP event was captured
     assert inp_data is not None, "INP event not found in Loki logs"
 
     # Verify that the INP event details
+    assert test_run_id in inp_data
     assert "kind=measurement" in inp_data
     assert "type=web-vitals" in inp_data
     assert "delta=" in inp_data
@@ -357,8 +374,7 @@ def test_web_vitals_fcp_reaches_loki(browser) -> None:
     Returns:
         None
     """
-    
-    
+        
     # Create unique test marker
     test_run_id = f"OBS-TEST-FCP-031-{uuid.uuid4().hex}" 
     
@@ -375,57 +391,60 @@ def test_web_vitals_fcp_reaches_loki(browser) -> None:
 <router-outlet></router-outlet>
 """
 
-    # Write the new content to app.html
-    APP_HTML.write_text(
-        app_html_content.strip() + "\n",
-        encoding="utf-8"
-    )
+    try: 
+ 
+        # Write the new content to app.html
+        APP_HTML.write_text(
+            app_html_content.strip() + "\n",
+            encoding="utf-8"
+        )
 
-    # Initialize the Loki client
-    loki = LokiClient()
+        # Initialize the Loki client
+        loki = LokiClient()
 
-    # Wait for the Angular bundle to include the new test div
-    for _ in range(30):
-        response = requests.get("http://localhost:4200/main.js")
+        # Wait for the Angular bundle to include the new test div
+        for _ in range(30):
+            response = requests.get("http://localhost:4200/main.js")
 
-        if test_run_id in response.text:
-            break
+            if test_run_id in response.text:
+                break
 
-        time.sleep(1)
+            time.sleep(1)
 
-    # Open the application in the browser
-    browser.get(f"http://localhost:4200?test_run_id={test_run_id}")
+        # Open the application in the browser
+        browser.get(f"http://localhost:4200?test_run_id={test_run_id}")
 
-    # Wait for the FCP measurement to be recorded
-    time.sleep(2)
+        # Wait for the FCP measurement to be recorded
+        time.sleep(2)
 
-    # Get the FCP event from Loki logs
-    fcp_data = loki.wait_for_log(
-        logql_query=(
-            '{service_name=~".+"}'
-            f' |= "{test_run_id}"'
-            '| logfmt'
-            '| kind="measurement"'
-            '| type="web-vitals"'
-            '| fcp > 0'
-        ),
-        timeout=30,
-        expected_text=test_run_id
-    )
+        # Get the FCP event from Loki logs
+        fcp_data = loki.wait_for_log(
+            logql_query=(
+                '{service_name=~".+"}'
+                f' |= "{test_run_id}"'
+                '| logfmt'
+                '| kind="measurement"'
+                '| type="web-vitals"'
+                '| fcp > 0'
+            ),
+            timeout=30,
+            expected_text=test_run_id
+        )
 
-    # Verify that the FCP event was captured
-    assert fcp_data is not None, "FCP event not found in Loki logs"
+        # Verify that the FCP event was captured
+        assert fcp_data is not None, "FCP event not found in Loki logs"
 
-    # Verify that the FCP event details
-    assert "kind=measurement" in fcp_data
-    assert "type=web-vitals" in fcp_data
-    assert "fcp=" in fcp_data
-    assert "context_load_state=" in fcp_data
-    assert "context_navigation_type=" in fcp_data
-    assert "sdk_name=faro-web" in fcp_data
+        # Verify that the FCP event details
+        assert "kind=measurement" in fcp_data
+        assert "type=web-vitals" in fcp_data
+        assert "fcp=" in fcp_data
+        assert "context_load_state=" in fcp_data
+        assert "context_navigation_type=" in fcp_data
+        assert "sdk_name=faro-web" in fcp_data
 
-    # Restore the original app.html
-    shutil.move(APP_HTML_BACKUP, APP_HTML)
+    finally: 
+       # Restore the original app.html
+       shutil.move(APP_HTML_BACKUP, APP_HTML)
 
 # ============================================
 # 7. Web-vitals - LCP
@@ -476,70 +495,92 @@ def test_web_vitals_lcp_reaches_loki(browser) -> None:
  <router-outlet></router-outlet>
 """
 
-    # Write the new content to app.html
-    APP_HTML.write_text(
-        app_html_content.strip() + "\n",
-        encoding="utf-8"
-    )
+    try: 
+        # Write the new content to app.html
+        APP_HTML.write_text(
+            app_html_content.strip() + "\n",
+            encoding="utf-8"
+        )
 
-    # Wait for the Angular bundle to include the new test div
-    for _ in range(30):
-        response = requests.get("http://localhost:4200/main.js")
+        # Wait for the Angular bundle to include the new test div
+        for _ in range(30):
+            response = requests.get("http://localhost:4200/main.js")
 
-        if test_run_id in response.text:
-            break
+            if test_run_id in response.text:
+                break
 
-        time.sleep(1)
+            time.sleep(1)
 
-    # Open the application in the browser
-    browser.get(f"http://localhost:4200/?test_run_id={test_run_id}")
+        # Open the application in the browser
+        browser.get(f"http://localhost:4200/?test_run_id={test_run_id}")
+       
+        # Set the script timeout to 30 seconds to allow for LCP measurement
+        browser.set_script_timeout(30)
 
-    # Set the script timeout to 30 seconds to allow for LCP measurement
-    browser.set_script_timeout(30)
+        # Save the application tab's handle so we can inspect and return to it.
+        app_tab = browser.current_window_handle
 
-    # Save the application tab
-    app_tab = browser.current_window_handle
+        # Initialize the visibility state of the application tab by executing a script
+        # Note: Enable `options.enable_bidi = True` in `scripts/ci/observability-fe/helpers/browser.py`
+        # for the BiDi protocol to work correctly with visibility state detection.
+        browser.script.execute(
+                    "() => document.visibilityState",
+                    context_id=app_tab
+                )
+        
+        # Switch away from the application to trigger Web Vitals reporting
+        browser.switch_to.new_window('tab')
+        browser.get("about:blank")
 
-    # Open a new tab to trigger the CLS event
-    browser.switch_to.new_window('tab')
-    browser.get("about:blank")
-    time.sleep(5)
+        # Wait until the original application tab becomes hidden
+        WebDriverWait(browser, 10).until(
+            lambda driver: driver.script.execute(
+                "() => document.visibilityState",
+                context_id=app_tab
+            )["value"] == "hidden"
+        )
 
-    # Switch back to the application tab
-    browser.switch_to.window(app_tab)
-    
-    # Wait for the LCP measurement to be recorded
-    time.sleep(2)
+        # Return to the application tab
+        browser.switch_to.window(app_tab)
 
-    # Initialize the Loki client
-    loki = LokiClient()
+        # Wait until the application becomes visible again
+        WebDriverWait(browser, 10).until(
+            lambda driver: driver.script.execute(
+                "() => document.visibilityState",
+                context_id=app_tab
+            )["value"] == "visible"
+        )
 
-    # Get the LCP event from Loki logs
-    lcp_data = loki.wait_for_log(
-        logql_query=(
-            '{app_name=~".+"}'
-            '|= "kind=measurement"'
-            '|= "type=web-vitals"'
-            '|= "lcp"'
-            f'|= "{test_run_id}"'
-        ),
-        timeout=30,
-        expected_text=test_run_id
-    )
+        # Initialize the Loki client
+        loki = LokiClient()
 
-    # Verify that the LCP event was found
-    assert lcp_data is not None, "LCP event not found in Loki logs"
+        # Get the LCP event from Loki logs
+        lcp_data = loki.wait_for_log(
+            logql_query=(
+                '{app_name=~".+"}'
+                '|= "kind=measurement"'
+                '|= "type=web-vitals"'
+                '|= "lcp"'
+                f'|= "{test_run_id}"'
+            ),
+            timeout=30,
+            expected_text=test_run_id
+        )
 
-    # Verify that the LCP event details
-    assert "kind=measurement" in lcp_data
-    assert "type=web-vitals" in lcp_data
-    assert "lcp=" in lcp_data
-    assert f"{test_run_id}" in lcp_data
-    assert "context_rating=" in lcp_data
-    assert "sdk_name=faro-web" in lcp_data
+        # Verify that the LCP event was found
+        assert lcp_data is not None, "LCP event not found in Loki logs"
 
-    # Restore the original app.html
-    shutil.move(APP_HTML_BACKUP, APP_HTML)
+        # Verify that the LCP event details
+        assert "kind=measurement" in lcp_data
+        assert "type=web-vitals" in lcp_data
+        assert "lcp=" in lcp_data
+        assert f"{test_run_id}" in lcp_data
+        assert "context_rating=" in lcp_data
+        assert "sdk_name=faro-web" in lcp_data
+
+    finally:
+        # Restore the original app.html
+        shutil.move(APP_HTML_BACKUP, APP_HTML)
 
 # ============================================
 # 8. Web-vitals - TTFB
