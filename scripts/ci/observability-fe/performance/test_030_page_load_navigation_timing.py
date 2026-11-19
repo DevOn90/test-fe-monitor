@@ -44,8 +44,6 @@ def test_page_load_navigation_timing(browser) -> None:
         timeout=30,
         expected_text=test_run_id
     )
-
-    print(f"Timing data: {timing_data}")
     
     # Verify that timing data was retrieved successfully
     assert timing_data is not None, "Failed to retrieve timing data from Loki logs"
