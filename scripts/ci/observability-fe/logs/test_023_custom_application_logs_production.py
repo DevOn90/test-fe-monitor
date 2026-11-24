@@ -463,7 +463,6 @@ def wait_for_angular_prod_server(timeout=120) -> None:
             response = requests.get(url, timeout=2)
 
             if response.status_code == 200:
-                print(f"[DEBUG] Angular production server is ready on port 4201 (HTTP {response.status_code}).")
                 return
 
         except requests.RequestException:
@@ -651,7 +650,6 @@ def stop_angular_prod_server() -> None:
                 break
         else:
             # Force termination if the process group is still running.
-            print("Production server did not stop. Sending SIGKILL.")
             os.killpg(pid, signal.SIGKILL)
     
     except ProcessLookupError:
