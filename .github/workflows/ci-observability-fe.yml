@@ -31,6 +31,7 @@ jobs:
                   
             # 4. Install Chrome and ChromeDriver
             - name: Install Chrome and ChromeDriver
+              id: setup-chrome
               uses: browser-actions/setup-chrome@48ad923757ca74d66703209fe939badbdf80f2f4      #v2
               with:
                   chrome-version: 156           # not stable, specific version
@@ -38,8 +39,11 @@ jobs:
 
             - name: Check Browser Version
               run: |
-                  google-chrome --version
-                  chromedriver --version
+                  echo "Setup Chrome version:"
+                  ${{ steps.setup-chrome.outputs.chrome-version }}
+                  
+                  echo "ChromeDriver version:"
+                  ${{ steps.setup-chrome.outputs.chromedriver-version }} --version
 
             # 5. Install Angular Deps
             - name: Install Angular Deps
@@ -128,6 +132,9 @@ jobs:
             # 11. Run Observability tests
             - name: Run front-end Observability tests
               working-directory: .
+              env:
+                CHROME_BIN: ${{ steps.setup-chrome.outputs.chrome-path }}
+                CHROMEDRIVER_BIN: ${{ steps.setup-chrome.outputs.chromedriver-path }}
               run: |
                   python -m pytest scripts/ci/observability-fe -v -s
 
