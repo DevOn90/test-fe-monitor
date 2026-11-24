@@ -13,6 +13,8 @@ def create_chrome_driver(headless: bool) -> WebDriver:
     # Configure headless mode if requested.
     if headless:
         options.add_argument("--headless")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
 
     # Set default window size and enable BiDi support.
     options.add_argument("--window-size=1920,1080")
@@ -25,7 +27,11 @@ def create_chrome_driver(headless: bool) -> WebDriver:
 
     # Use explicit ChromeDriver binary when provided (CI).
     chromedriver_bin = os.getenv("CHROMEDRIVER_BIN")
-    service = Service(executable_path=chromedriver_bin) if chromedriver_bin else Service()
+    service = (
+        Service(executable_path=chromedriver_bin) 
+        if chromedriver_bin 
+        else Service()
+    )
 
     # Create the Chrome WebDriver with the specified service and options.
     driver = webdriver.Chrome(service=service, options=options)
