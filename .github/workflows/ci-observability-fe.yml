@@ -40,10 +40,10 @@ jobs:
             - name: Check Browser Version
               run: |
                   echo "Setup Chrome version:"
-                  ${{ steps.setup-chrome.outputs.chrome-version }}
+                  ${{ steps.setup-chrome.outputs.chrome-path }} --version
                   
                   echo "ChromeDriver version:"
-                  ${{ steps.setup-chrome.outputs.chromedriver-version }} --version
+                  ${{ steps.setup-chrome.outputs.chromedriver-path }} --version
 
             # 5. Install Angular Deps
             - name: Install Angular Deps
