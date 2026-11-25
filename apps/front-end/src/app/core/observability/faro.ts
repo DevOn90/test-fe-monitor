@@ -26,5 +26,8 @@ export function initializeFrontendMonitoring(): void {
       new WebVitalsInstrumentation(),
       new UserActionInstrumentation(),
     ],
+    experimental: {
+      trackNavigation: true,
+    }
   });
 }

@@ -1,19 +1,20 @@
 #!/usr/bin/env python3
 
 # ========================================
-# Purpose: Test page view navigation and logging of view changes
+# Purpose: Test page view navigation and Angular route changes 
+#          including logging of view changes & faro.navigation
 #          to the observability system (Loki)
 #
 # Steps: 1. Define vriables
 #        2. Backup routing configuration
-#        3. Create home component
-#        4. Create profile component
+#        3 & 10. Create home component
+#        4 & 11. Create profile component
 #        5. Create routing configuration
 #        6. Open Angular application
 #        7. Click profile button
-#        8. Verify log created in loki
+#        8 & 12. Verify log created in loki
 #        9. Restore files
-#        10. Main
+#        13. Main
 #
 # ========================================
 
@@ -302,7 +303,129 @@ def restore_files() -> None:
     shutil.rmtree(PROFILE_PATH.parent, ignore_errors=True)
 
 # ========================================
-# 10. Main
+# 10. Create home component for Angular route changes test
+# ========================================
+
+def create_home_component_route_changes() -> None:
+
+    """
+    Create the home component for Angular route changes test.
+
+    Arguments:
+        None
+
+    Returns:
+        None
+    """
+
+    # Define the home component for Angular route changes test
+    home_component_content = """
+import { Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
+
+@Component({
+selector: 'app-home',
+imports: [RouterLink],
+template: `
+    <button id='profile-button' routerLink='/profile'>
+    Profile
+    </button>
+`,
+styles: ``,
+})
+export class Home {}
+"""
+    # Create the home component folder if it doesn't exist
+    HOME_PATH.parent.mkdir(parents=True, exist_ok=True)
+    
+    # Write the home component content to the appropriate file
+    HOME_PATH.write_text(
+        home_component_content.strip() + '\n',
+        encoding='utf-8'
+    )
+
+# ========================================
+# 11. Create profile component for Angular route changes test
+# ========================================
+
+def create_profile_component_route_changes() -> None:
+
+    """
+    Create the profile component for Angular route changes test.
+
+    Arguments:
+        None
+
+    Returns:
+        None
+    """
+
+    profile_component_content = """
+import { Component } from '@angular/core';
+
+@Component({
+selector: 'app-profile',
+imports: [],
+template: `
+    <p>
+    profile works!
+    </p>
+`,
+styles: ``,
+})
+export class Profile {}
+"""
+    # Create the profile component folder if it doesn't exist
+    PROFILE_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+    # Write the profile component content to the appropriate file
+    PROFILE_PATH.write_text(
+        profile_component_content.strip() + '\n',
+        encoding='utf-8'
+    )
+
+# ========================================
+# 12. Verify logs in Loki for Angular route changes test
+# ========================================
+
+def verify_logs_in_loki_route_changes() -> None:
+    """
+    Verify logs in Loki for Angular route changes test.
+
+    Arguments:
+        None
+
+    Returns:
+        None
+    """
+
+    # Initialize Loki client
+    loki = LokiClient()
+
+    # Get logs from Loki for the Angular route changes test
+    route_changes_log = loki.wait_for_log(
+        logql_query=(
+            '{service_name="front-end"}'
+            '|= "faro.navigation"'
+        ),
+        timeout=30,
+        expected_text='faro.navigation'
+    ) 
+
+    # Verify logs exist for the Angular route changes test
+    assert route_changes_log is not None, "Expected log for Angular route changes not found"
+
+    # Verify log contains the expected details
+    assert 'kind=event' in route_changes_log
+    assert 'event_name=faro.navigation' in route_changes_log
+    assert 'event_data_duration=' in route_changes_log
+    assert 'event_data_fromUrl=' in route_changes_log
+    assert 'event_data_toUrl=' in route_changes_log
+    assert 'sdk_name=faro-web' in route_changes_log
+    
+
+# ========================================
+# 13. Main
 # ========================================
 
 def test_page_views(browser) -> None:
@@ -322,6 +445,28 @@ def test_page_views(browser) -> None:
         click_profile_button(browser)
         # 8. Verify logs in Loki
         verify_logs_in_loki()
+    finally:
+        # 9. Restore files
+        restore_files()
+
+def test_angular_route_changes(browser) -> None:
+
+    try:
+        # 2. Backup routing configuration
+        backup_routing_configuration()
+        # 10. Create home component for Angular route changes test
+        create_home_component_route_changes()
+        # 11. Create profile component for Angular route changes test
+        create_profile_component_route_changes()
+        # 5. Create routing configuration
+        create_routing_configuration()
+        # 6. Open Angular application
+        browser.get('http://localhost:4200')
+        # 7. Click profile button
+        click_profile_button(browser)
+        # 12. Verify logs in Loki
+        verify_logs_in_loki_route_changes()
+
     finally:
         # 9. Restore files
         restore_files()
