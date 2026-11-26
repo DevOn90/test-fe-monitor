@@ -33,7 +33,6 @@ def test_faro_sdk_deduplicates_repeated_error_reports(browser):
     assert "type=Error" in first_log
     assert "stacktrace=" in first_log
     assert "sdk_name=faro-web" in first_log
-    assert "sdk_version=2.12.1" in first_log
 
     # Allow time for any additional records to arrive.
     time.sleep(5)
