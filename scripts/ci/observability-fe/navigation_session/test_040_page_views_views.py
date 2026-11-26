@@ -25,6 +25,7 @@
 from pathlib import Path
 import shutil
 from helpers.loki import LokiClient
+import uuid
 
 FRONTEND_PATH = Path(__file__).resolve().parents[4]
 
@@ -419,8 +420,8 @@ def verify_logs_in_loki_route_changes() -> None:
     assert 'kind=event' in route_changes_log
     assert 'event_name=faro.navigation' in route_changes_log
     assert 'event_data_duration=' in route_changes_log
-    assert 'event_data_fromUrl=' in route_changes_log
-    assert 'event_data_toUrl=' in route_changes_log
+    assert 'event_data_fromUrl=http://localhost:4200/home' in route_changes_log
+    assert 'event_data_toUrl=http://localhost:4200/profile' in route_changes_log
     assert 'sdk_name=faro-web' in route_changes_log
     
 
