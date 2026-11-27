@@ -236,7 +236,7 @@ Faro has PerformanceInstrumentation enabled by default, unless it is disabled in
 |---|---|---|--- | ---- |---|---|---|
 | Page views / views | Observation of page or view | `ViewInstrumentation` | Required | -- | -- | [Test-040](#test-040) | [test_040_page_views_views.py](../../../scripts/ci/observability-fe/navigation_session/test_040_page_views_views.py)
 | Route changes | Navigation between Angular routes | Depends on configuration and integration | Required | -- | -- | [Test-040](#test-040) | [test_040_page_views_views.py](../../../scripts/ci/observability-fe/navigation_session/test_040_page_views_views.py)
-| Browser navigation | Browser navigation | `NavigationInstrumentation`, according to settings | Recommended | -- | -- | [Test-041](#test-041) | 
+| Browser navigation | Browser navigation | `NavigationInstrumentation`, according to settings | Recommended | -- | -- | [Test-041](#test-041) | **N/A - Faro Bug - SDK Limitation**
 | Session information | Session information | `SessionInstrumentation` | Required | -- | -- | [Test-043](#test-043) |
 | User actions | User actions | `UserActionInstrumentation` | Recommended |  -- | -- | [Test-032](#test-032) | [test_032_user_interaction.py](../../../scripts/ci/observability-fe/performance/test_032_user_interaction.py)
 | Session correlation | Correlation of events with the session | Faro metadata | Required |  -- | -- | [Test-043](#test-043) |
@@ -3144,7 +3144,7 @@ instrumentations: [
 **Precondition:** Default Grafana stack (see Frontend telemetry)<br>
 
 ### Other Preconditions
-- Faro SDK 2.12.1 is initialized successfully.
+- Faro SDK 2.15.0 is initialized successfully.
 - Faro NavigationInstrumentation is enabled and configured.
 - Faro telemetry is being received by Alloy and forwarded to Loki.
 - The Angular application is running and accessible through the browser.
@@ -3157,19 +3157,43 @@ instrumentations: [
 |---|---|---|---|
 | Direct URL `/home` | Full page load | `faro.performance.navigation` | [Test-030](#test-030) |
 | Direct URL `/profile` | Full page load | `faro.performance.navigation` | [Test-030](#test-030) |
-| Reload (F5) | Full page load | `faro.performance.navigation` |
-| Browser Back/Forward across full page loads | Browser loads another document | `faro.performance.navigation` |
-| Browser Back/Forward within Angular SPA history | Same document, route changes | Potentially `faro.navigation` |
+| Reload (F5) | Full page load | `faro.performance.navigation` | [Test-030](#test-030) |
+| Browser Back/Forward across full page loads | Browser loads another document | `faro.performance.navigation` | [Test-030](#test-030) |
+| Browser Back/Forward within Angular SPA history | Same document, route changes | Potentially `faro.navigation` | [Test-041](#test-041) |
 
 ### Procedure
+1. Create temporary `Home` and `Profile` page components, `btn` element in `Home` for navigation from home to profile using `routerLink`.
+2. Configure Angular routing for Home and Profile components.
+3. Open the Angular application in the browser and navigate to the Home page.
+4. Click the navigation button to go from Home to Profile.
+5. Use the browser Back button to navigate from Profile back to Home.
+6. In browser Network tab or Grafana Explore, verify that the navigation events `faro.navigation` is logged.
 
 ### Expected results
+- Angular route navigation generates a faro.navigation event.
+- Browser Back generates a faro.navigation event representing the transition from /profile to /home.
+- Browser Forward generates a faro.navigation event representing the transition from /home to /profile.
+- Events are successfully forwarded through Alloy and stored in Loki.
+- The navigation event sequence accurately represents the user's route transitions.
 
 ### Pass
 
+- NO - Navigation events are not logged for browser Back/Forward actions within the Angular SPA history.
+- Consequence: The user journey may appear incomplete, and route transitions within the Angular SPA may not be fully captured in the observability data.
+- interim solution:
+  - Use OpenReplay as a complementary tool to capture session replay and user journey information that may be missing from Faro events.
+
 ### Default
 
+**Status: Failed – Potential Faro SDK limitation**
+
 ### Limitations
+- Browser Back/Forward navigation within an Angular SPA may not be fully represented in Faro's faro.navigation event stream.
+- Missing navigation events can result in incomplete user journey reconstruction and missing route transition information.
+- This limitation affects navigation observability, but does not by itself indicate that other Faro instrumentation (such as error reporting, logs, traces or Web Vitals) is not working.
+- Full-page navigation and initial page-load performance events are covered separately by Test-030.
+-OpenReplay may be evaluated as a complementary tool for session replay and user journey analysis. It does not fix the missing Faro events.
+- Further investigation or custom Angular Router instrumentation may be required if complete SPA Back/Forward navigation telemetry is needed.
 
 ---
 
